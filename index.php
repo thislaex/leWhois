@@ -1,190 +1,169 @@
-<!-- 
-Developed by laex - Volkan 
-
-leWhois system v0.0.1
-
--->
-
-
-<?php
-function getWhois(string $domain): string
-{
-  $domain = trim($domain);
-  if (filter_var($domain, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME) === false) {
-    return "error: Geçersiz alan adı: $domain";
-  }
-
-  $whoisServer = "whois.verisign-grs.com";
-  if (preg_match('/\.tr$/i', $domain)) {
-    $whoisServer = "whois.nic.tr";
-  }
-
-  $conn = @fsockopen($whoisServer, 43, $errno, $errstr, 10);
-
-  if (!$conn) {
-    return "error: Bağlantı başarısız: $errstr ($errno)";
-  }
-
-  fwrite($conn, $domain . "\r\n");
-  $response = '';
-  while (!feof($conn)) {
-    $response .= fgets($conn, 128);
-  }
-  fclose($conn);
-
-  if (empty($response) || stripos($response, 'No match for') !== false) {
-    return "error: Alan adı bulunamadı: $domain";
-  }
-
-  return $response;
-}
-
-function getDomainPrices(string $domain): array
-{
-  return [
-    [
-      'firma' => 'GoDaddy',
-      'fiyat' => 9.99,
-      'url' => 'https://www.godaddy.com/domainsearch/find?checkAvail=1&tmskey=&domainToCheck=' . urlencode($domain)
-    ],
-    [
-      'firma' => 'Namecheap',
-      'fiyat' => 8.88,
-      'url' => 'https://www.namecheap.com/domains/registration/results/?domain=' . urlencode($domain)
-    ],
-    [
-      'firma' => 'Bluehost',
-      'fiyat' => 12.99,
-      'url' => 'https://www.bluehost.com/domains/domain-name-search?search=' . urlencode($domain)
-    ],
-  ];
-}
-
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-  $domains = $_POST['domains'] ?? '';
-  $domains = explode(',', $domains);
-}
-?>
-
-
 <!DOCTYPE html>
 <html lang="tr">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WHOIS Sorgulama</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+  <title>Modern Whois Kontrol</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/index.css">
 </head>
 
-<body>
-  <nav class="navbar navbar-expand-lg navbar-dark">
-    <div class="container">
-      <a class="navbar-brand" href="#">WHOIS Sorgulama</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item">
-            <a class="nav-link" href="#">Ana Sayfa</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#">Hakkımızda</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#">İletişim</a>
-          </li>
+<body class="bg-gradient-to-br from-purple-600 to-blue-500 min-h-screen flex flex-col">
+
+  <header class="bg-white shadow-md py-4">
+    <div class="container mx-auto px-4 flex justify-between items-center">
+      <h1 class="text-2xl font-bold text-gray-800">leWhois</h1>
+      <nav>
+        <ul class="flex space-x-6">
+          <li><a href="#" class="text-gray-600 hover:text-purple-500 transition duration-300">Anasayfa</a></li>
+          <li><a href="#" class="text-gray-600 hover:text-purple-500 transition duration-300">Hakkında</a></li>
+          <li><a href="#" class="text-gray-600 hover:text-purple-500 transition duration-300">İletişim</a></li>
         </ul>
-      </div>
+      </nav>
     </div>
-  </nav>
+  </header>
+
+  <div class="flex-1 container mx-auto px-4 mt-10 fade-in">
+    <div class="max-w-xl mx-auto p-8 bg-white shadow-lg rounded-2xl transform transition duration-500 hover:scale-105">
+      <h2 class="text-4xl font-extrabold text-gray-800 mb-8 text-center">Whois Kontrol</h2>
+      <?php
+      function sanitizeDomain(string $domain): string
+      {
+        return strtolower(trim($domain));
+      }
+
+      function isValidDomain(string $domain): bool
+      {
+        return filter_var($domain, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME);
+      }
+
+      function getWhois(string $domain): string
+      {
+        $domain = sanitizeDomain($domain);
+
+        if (!isValidDomain($domain)) {
+          return "error: Geçersiz alan adı.";
+        }
+
+        $whoisServer = "whois.verisign-grs.com";
+        if (preg_match('/\.tr$/i', $domain)) {
+          $whoisServer = "whois.nic.tr";
+        }
+
+        $conn = @fsockopen($whoisServer, 43, $errno, $errstr, 5);
+
+        if (!$conn) {
+          return "error: WHOIS sunucusuna bağlanılamadı.";
+        }
+
+        fwrite($conn, $domain . "\r\n");
+        $response = '';
+        while (!feof($conn)) {
+          $response .= fgets($conn, 128);
+        }
+        fclose($conn);
+
+        if (empty($response) || stripos($response, 'No match for') !== false) {
+          return "not registered";
+        }
+
+        return htmlspecialchars($response);
+      }
+
+      function getDomainPrices(string $domain): array
+      {
+        $domain = sanitizeDomain($domain);
+
+        return [
+          [
+            'firma' => 'GoDaddy',
+            'fiyat' => 9.99,
+            'url' => 'https://www.godaddy.com/domainsearch/find?checkAvail=1&tmskey=&domainToCheck=' . urlencode($domain)
+          ],
+          [
+            'firma' => 'Namecheap',
+            'fiyat' => 8.88,
+            'url' => 'https://www.namecheap.com/domains/registration/results/?domain=' . urlencode($domain)
+          ],
+          [
+            'firma' => 'Bluehost',
+            'fiyat' => 12.99,
+            'url' => 'https://www.bluehost.com/domains/domain-name-search?search=' . urlencode($domain)
+          ],
+        ];
+      }
+
+      $results = [];
+
+      if ($_SERVER["REQUEST_METHOD"] === "POST") {
+        $domains = $_POST['domains'] ?? '';
+        $domainArray = array_map('sanitizeDomain', explode(',', $domains));
+
+        foreach ($domainArray as $domain) {
+          $whoisResult = getWhois($domain);
+          $prices = ($whoisResult === "not registered") ? getDomainPrices($domain) : [];
+          $results[] = [
+            'domain' => $domain,
+            'whois' => $whoisResult,
+            'prices' => $prices
+          ];
+        }
+      }
+      ?>
 
 
-  <div class="container mt-5">
-    <div class="row justify-content-center">
-      <div class="col-md-8">
-        <h2 class="text-center mb-4">WHOIS Sorgulama</h2>
-        <form method="post" class="input-group mb-3 card p-4 shadow-sm bg-dark text-white border-0 rounded-3">
-          <input type="text color-white" class="form-control" id="domains" name="domains"
-            placeholder="Birden fazla alan adı girebilirsiniz, her birini virgül ile ayırın." required>
-          <button class="btn btn-primary" type="submit">Sorgula</button>
-        </form>
-        <div class="alert alert-info d-none" id="result">
-          <strong>Sonuç:</strong> <span id="resultText"></span>
+      <form method="POST" action="">
+        <div class="mb-6">
+          <label for="domains" class="block text-gray-600 text-lg font-semibold mb-2">Alan Adları (Virgülle
+            Ayırın):</label>
+          <input type="text" id="domains" name="domains" placeholder="example.com, example.org"
+            class="w-full px-5 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-500 transition duration-300"
+            value="<?php echo isset($domains) ? htmlspecialchars($domains) : ''; ?>">
         </div>
-      </div>
-    </div>
-  </div>
 
-  <?php if (isset($domains) && !empty($domains)): ?>
-    <div class="row mt-5">
-      <div class="col-md-8 offset-md-2">
-        <div class="card bg-le shadow-sm p-4">
-          <h3 class="card-title">WHOIS Bilgileri:</h3>
+        <button type="submit"
+          class="w-full py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-lg font-semibold rounded-lg shadow-md hover:shadow-lg transition duration-300 transform hover:scale-105">Sorgula</button>
+      </form>
 
-          <?php foreach ($domains as $domain): ?>
-            <?php
-            $domain = trim($domain);
-            $whoisData = getWhois($domain);
-            ?>
+      <?php if (!empty($results)): ?>
+        <?php foreach ($results as $result): ?>
+          <div class="mt-10">
+            <h3 class="text-2xl font-bold text-gray-800 mb-3"><?php echo htmlspecialchars($result['domain']); ?> Whois
+              Sonucu:</h3>
+            <div class="result-box">
+              <p class="text-lg font-semibold">
+                <?php echo htmlspecialchars($result['whois'] === "not registered" ? "Domain kayıtlı değil" : $result['whois']); ?>
+              </p>
+            </div>
 
-            <?php if (strpos($whoisData, 'error:') === 0): ?>
-              <?php
-              $domainName = htmlspecialchars($domain);
-              ?>
-              <div class="alert alert-danger mt-3">Alan adı bulunamadı: <?php echo $domainName; ?></div>
-
-              <?php
-              // Alan adı kayıt fiyatlarını al ve listele
-              $prices = getDomainPrices($domainName);
-              ?>
-              <div class="mt-3">
-                <h5><?php echo htmlspecialchars($domainName); ?> için popüler firmalardaki fiyatlar:</h5>
-                <ul class="list-group">
-                  <?php foreach ($prices as $price): ?>
-                    <li class="list-group-item">
-                      <div class="price-container">
-                        <span><?php echo htmlspecialchars($price['firma']); ?>:</span>
-                        <span class="currency"
-                          data-price-dolar="<?php echo htmlspecialchars($price['fiyat']); ?>"><?php echo htmlspecialchars($price['fiyat']); ?>
-                          USD</span>
-                        <span class="currency-switcher text-primary" onclick="switchCurrency(this)">₺</span>
-                        <a href="<?php echo htmlspecialchars($price['url']); ?>" class="btn btn-sm btn-success ms-3"
-                          target="_blank">Satın Al</a>
-                      </div>
-                    </li>
-                  <?php endforeach; ?>
-                </ul>
-              </div>
-            <?php else: ?>
-              <div class="mt-3">
-                <h5><?php echo htmlspecialchars($domain); ?>:</h5>
-                <pre class="bg-le p-3 border"><?php echo htmlspecialchars($whoisData); ?></pre>
-              </div>
+            <?php if ($result['whois'] === "not registered"): ?>
+              <h4 class="text-xl font-bold text-gray-800 mt-6 mb-3">Domain Fiyatları:</h4>
+              <ul class="space-y-3">
+                <?php foreach ($result['prices'] as $price): ?>
+                  <li class="bg-white p-4 rounded-lg shadow-md hover:bg-gray-50 transition duration-300">
+                    <a href="<?php echo htmlspecialchars($price['url']); ?>" target="_blank"
+                      class="text-purple-500 font-semibold">
+                      <?php echo htmlspecialchars($price['firma']); ?>: $<?php echo htmlspecialchars($price['fiyat']); ?>
+                    </a>
+                  </li>
+                <?php endforeach; ?>
+              </ul>
             <?php endif; ?>
-          <?php endforeach; ?>
-
-        </div>
-      </div>
-    </div>
-  <?php endif; ?>
-  </div>
-
-
-  <div class="footer">
-    <div class="container">
-      <div class="row justify-content-between">
-        <div class="col-md-6">© 2024 leWhois v0.0.1 - laex.com.tr</div>
-      </div>
+          </div>
+        <?php endforeach; ?>
+      <?php endif; ?>
     </div>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
-  <script src="assets/js/script.js"></script>
+  <!-- Footer -->
+  <footer class="bg-white shadow-md py-4 mt-10">
+    <div class="container mx-auto px-4 flex justify-between items-center">
+      <p class="text-gray-600">© 2024 leWhois. All rights reserved. It was developed by laex as open source.</p>
+      <a href="https://laex.com.tr" class="text-purple-500 hover:underline">laex.com.tr</a>
+    </div>
+  </footer>
+
 </body>
 
 </html>
