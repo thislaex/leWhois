@@ -1,0 +1,145 @@
+body {
+  background-color: #212529;
+  color: #fff;
+}
+
+.color-white {
+  color: #fff !important;
+}
+
+.bg-le {
+  background-color: #212529;
+}
+
+.navbar {
+  background-color: #343a40 !important;
+}
+
+.navbar-brand {
+  color: #fff;
+  font-weight: bold;
+}
+
+.navbar-nav .nav-link {
+  color: #fff;
+}
+
+.navbar-nav .nav-link:hover {
+  color: #f8f9fa;
+}
+
+.navbar-nav .nav-item .dropdown-menu {
+  background-color: #343a40;
+  border: none;
+}
+
+.navbar-nav .nav-item .dropdown-menu .dropdown-item {
+  color: #fff;
+}
+
+.navbar-nav .nav-item .dropdown-menu .dropdown-item:hover {
+  background-color: #0056b3;
+}
+
+.form-control {
+  background-color: #343a40;
+  color: #fff !important;
+  border-color: #343a40;
+}
+
+.form-control:focus {
+  background-color: #343a40;
+  color: #fff;
+  border-color: #343a40;
+  box-shadow: none;
+}
+
+.input-group-text {
+  background-color: #343a40;
+  color: #fff;
+  border-color: #343a40;
+}
+
+.input-group-text:focus {
+  background-color: #343a40;
+  color: #fff;
+  border-color: #343a40;
+  box-shadow: none;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+  border-color: #0056b3;
+}
+
+.footer {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background-color: #343a40;
+  color: #fff;
+  text-align: center;
+  padding: 10px 0;
+}
+
+.language-select {
+  position: relative;
+}
+
+.language-select select {
+  padding: 10px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: #343a40;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+
+.language-select::before {
+  content: '\f107';
+  font-family: 'Font Awesome 5 Free';
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #fff;
+}
+
+.nav-item:hover .dropdown-menu {
+  display: block;
+}
+
+.form-control {
+  background-color: #343a40;
+  color: #fff;
+  border-color: #343a40;
+  width: 100% !important;
+}
+
+.form-control:focus {
+  background-color: #343a40;
+  color: #fff;
+  border-color: #343a40;
+  box-shadow: none;
+}
+
+.input-group-text {
+  background-color: #343a40;
+  color: #fff;
+  border-color: #343a40;
+}
+
+.input-group-text:focus {
+  background-color: #343a40;
+  color: #fff;
+  border-color: #343a40;
+  box-shadow: none;
+}
