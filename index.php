@@ -15,6 +15,10 @@ function getWhois(string $domain): string
   }
 
   $whoisServer = "whois.verisign-grs.com";
+  if (preg_match('/\.tr$/i', $domain)) {
+    $whoisServer = "whois.nic.tr";
+  }
+
   $conn = @fsockopen($whoisServer, 43, $errno, $errstr, 10);
 
   if (!$conn) {
@@ -105,7 +109,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       <div class="col-md-8">
         <h2 class="text-center mb-4">WHOIS Sorgulama</h2>
         <form method="post" class="input-group mb-3 card p-4 shadow-sm bg-dark text-white border-0 rounded-3">
-          <input type="text color-white" class="form-control" id="domains" name="domains" placeholder="Birden fazla alan adı girebilirsiniz, her birini virgül ile ayırın." required>
+          <input type="text color-white" class="form-control" id="domains" name="domains"
+            placeholder="Birden fazla alan adı girebilirsiniz, her birini virgül ile ayırın." required>
           <button class="btn btn-primary" type="submit">Sorgula</button>
         </form>
         <div class="alert alert-info d-none" id="result">
